@@ -363,9 +363,15 @@ def get_trade_outcome(trade_id):
         # Filter candles after entry timestamp
         candles_after = []
         for timestamp, row in df.iterrows():
-            if timestamp > trade.entry_timestamp:
+            # Ensure trade.entry_timestamp is timezone-aware for comparison
+            entry_ts = trade.entry_timestamp
+            if entry_ts.tzinfo is None:
+                import pytz
+                entry_ts = pytz.UTC.localize(entry_ts)
+
+            if timestamp > entry_ts:
                 candle = Candle.from_series(row, '3m')
-                candle.timestamp = timestamp
+                candle.timestamp = timestamp.to_pydatetime() if hasattr(timestamp, 'to_pydatetime') else timestamp
                 candles_after.append(candle)
 
         if not candles_after:
