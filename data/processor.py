@@ -175,8 +175,12 @@ class DataProcessor:
 
         # Calculate date range for context
         # For higher timeframes, we need data from before the specific date
-        context_start = date - timedelta(days=10)  # Get 10 days of context
-        context_end = date + timedelta(days=1)
+        context_start_date = date - timedelta(days=10)  # Get 10 days of context
+        context_end_date = date + timedelta(days=1)
+
+        # Convert to datetime objects for the fetcher
+        context_start = datetime.combine(context_start_date, datetime.min.time())
+        context_end = datetime.combine(context_end_date, datetime.min.time())
 
         fetcher = DataFetcher()
         result = {}
