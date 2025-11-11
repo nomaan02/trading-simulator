@@ -257,24 +257,55 @@ class DataFetcher:
         # Fetch fresh data
         print(f"Fetching fresh data for {timeframe}...")
 
-        # Fetch 1-minute base data
-        df_1m = self.fetch_german30_data(start_date, end_date, interval='1m')
+        # Determine best interval based on date range
+        # Yahoo Finance limitations:
+        # - 1m data: last 7 days only
+        # - 5m data: last 60 days
+        # - 15m/30m/60m/90m: last 60 days
+        # - 1h: last 730 days
 
-        if df_1m is None or df_1m.empty:
-            print("Failed to fetch 1-minute data")
+        from datetime import timedelta
+        days_ago = (datetime.now(pytz.UTC) - start_date).days
+
+        # Choose appropriate base interval
+        if days_ago <= 7:
+            base_interval = '1m'
+        elif days_ago <= 60:
+            base_interval = '5m'
+        else:
+            # For older data, use hourly and downsample
+            base_interval = '1h'
+
+        print(f"Using {base_interval} interval (data from {days_ago} days ago)")
+
+        # Fetch base data
+        df_base = self.fetch_german30_data(start_date, end_date, interval=base_interval)
+
+        if df_base is None or df_base.empty:
+            print(f"Failed to fetch {base_interval} data")
+            print(f"Yahoo Finance may not have data for {start_date.date()} to {end_date.date()}")
+            print(f"Try using dates within the last 7 days for best results")
             return None
 
-        # Cache 1-minute data
-        self.cache_data(df_1m, '1m')
+        # Cache base data
+        self.cache_data(df_base, base_interval)
 
         # Resample to target timeframe if needed
-        if timeframe == '1m':
-            return df_1m
-        else:
-            df_resampled = self.resample_to_timeframe(df_1m, timeframe)
-            if df_resampled is not None:
-                self.cache_data(df_resampled, timeframe)
-            return df_resampled
+        if timeframe == base_interval:
+            return df_base
+
+        # Special handling for 3m timeframe
+        if timeframe == '3m' and base_interval == '5m':
+            # Can't accurately downsample from 5m to 3m, use 5m as substitute
+            print("Note: Using 5m data as substitute for 3m (historical data limitation)")
+            self.cache_data(df_base, '3m')  # Cache as 3m for consistency
+            return df_base
+
+        # For other conversions, try resampling
+        df_resampled = self.resample_to_timeframe(df_base, timeframe)
+        if df_resampled is not None:
+            self.cache_data(df_resampled, timeframe)
+        return df_resampled
 
     def fetch_multiframe_data(self, start_date, end_date, timeframes=['4h', '1h', '3m']):
         """

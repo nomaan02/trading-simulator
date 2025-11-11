@@ -240,6 +240,9 @@ def get_candles():
         })
 
     except Exception as e:
+        import traceback
+        print(f"Error in get_candles: {e}")
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
