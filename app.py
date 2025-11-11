@@ -33,9 +33,18 @@ def create_app(config_class=Config):
     # Context processor to inject config into templates
     @app.context_processor
     def inject_config():
+        # Convert time objects to JSON-serializable format
+        time_windows_serializable = {}
+        for key, window in Config.TIME_WINDOWS.items():
+            time_windows_serializable[key] = {
+                'label': window['label'],
+                'start': window['start'].strftime('%H:%M'),
+                'end': window['end'].strftime('%H:%M')
+            }
+
         return {
             'config': Config,
-            'time_windows': Config.TIME_WINDOWS
+            'time_windows': time_windows_serializable
         }
 
     # Error handlers

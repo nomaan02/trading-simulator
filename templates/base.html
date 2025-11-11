@@ -56,7 +56,7 @@
             stopLossPoints: {{ config.STOP_LOSS_POINTS }},
             takeProfitPoints: {{ config.TAKE_PROFIT_POINTS }},
             riskRewardRatio: {{ config.RISK_REWARD_RATIO }},
-            timeWindows: {{ config.TIME_WINDOWS | tojson | safe }}
+            timeWindows: {{ time_windows | tojson | safe }}
         };
 
         // Utility functions
