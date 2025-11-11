@@ -1,0 +1,321 @@
+/*
+ * Chart-specific styles for Lightweight Charts integration
+ */
+
+/* ========================================
+   Chart Container Layout
+   ======================================== */
+.chart-container {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--bg-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chart-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chart-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+.chart-wrapper {
+    position: relative;
+}
+
+/* ========================================
+   Multi-Chart Layout
+   ======================================== */
+.multi-chart-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: var(--spacing-sm);
+}
+
+.chart-4h-container {
+    height: 250px;
+    flex-shrink: 0;
+}
+
+.chart-1h-container {
+    height: 250px;
+    flex-shrink: 0;
+}
+
+.chart-3m-container {
+    flex: 1;
+    min-height: 400px;
+}
+
+/* ========================================
+   Drawing Tools Toolbar
+   ======================================== */
+.drawing-toolbar {
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-xs);
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs);
+    z-index: 10;
+}
+
+.drawing-tool {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.drawing-tool:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.drawing-tool.active {
+    background-color: var(--accent-blue);
+    color: white;
+}
+
+.drawing-tool-separator {
+    width: 1px;
+    background-color: var(--border-color);
+    margin: 0 var(--spacing-xs);
+}
+
+/* ========================================
+   Trade Markers
+   ======================================== */
+.trade-marker {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.trade-marker-long {
+    background-color: var(--bullish-green);
+}
+
+.trade-marker-short {
+    background-color: var(--bearish-red);
+}
+
+.trade-marker-exit-win {
+    background-color: var(--success-green);
+    border: 2px solid white;
+}
+
+.trade-marker-exit-loss {
+    background-color: var(--bearish-red);
+    border: 2px solid white;
+}
+
+/* ========================================
+   Price Lines
+   ======================================== */
+.price-line {
+    stroke-width: 1;
+    stroke-dasharray: 4, 4;
+}
+
+.price-line-entry {
+    stroke: var(--text-secondary);
+}
+
+.price-line-sl {
+    stroke: var(--bearish-red);
+}
+
+.price-line-tp {
+    stroke: var(--bullish-green);
+}
+
+/* ========================================
+   Chart Watermark
+   ======================================== */
+.chart-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 120px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.02);
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+}
+
+/* ========================================
+   Chart Controls
+   ======================================== */
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.chart-control-btn {
+    padding: 4px 8px;
+    font-size: var(--font-size-xs);
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.chart-control-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.chart-control-btn.active {
+    background-color: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+/* ========================================
+   Time Sync Indicator
+   ======================================== */
+.time-sync-line {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: var(--accent-blue);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ========================================
+   Chart Loading State
+   ======================================== */
+.chart-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(19, 23, 34, 0.8);
+    z-index: 20;
+}
+
+/* ========================================
+   Crosshair Sync Effect
+   ======================================== */
+.chart-synced {
+    position: relative;
+}
+
+.chart-synced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid var(--accent-blue);
+    border-radius: var(--radius-md);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    pointer-events: none;
+    z-index: 11;
+}
+
+.chart-synced.active::before {
+    opacity: 1;
+}
+
+/* ========================================
+   Legend
+   ======================================== */
+.chart-legend {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background-color: rgba(30, 34, 45, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    z-index: 10;
+}
+
+.legend-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: 2px;
+}
+
+.legend-row:last-child {
+    margin-bottom: 0;
+}
+
+.legend-label {
+    color: var(--text-secondary);
+}
+
+.legend-value {
+    color: var(--text-primary);
+}
+
+/* ========================================
+   Replay Progress Blur
+   ======================================== */
+.chart-blur-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(to right, transparent 0%, var(--bg-panel) 100%);
+    pointer-events: none;
+    z-index: 8;
+}

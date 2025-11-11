@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}German30 Trading Simulator{% endblock %}</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="{{ url_for('views.index') }}" class="logo">
+                <span class="logo-icon">📈</span>
+                <span class="logo-text">German30 Simulator</span>
+            </a>
+            {% block navbar_info %}{% endblock %}
+        </div>
+
+        <div class="navbar-right">
+            <a href="{{ url_for('views.simulator') }}" class="nav-link">Simulator</a>
+            <a href="{{ url_for('views.stats') }}" class="nav-link">Statistics</a>
+            <div class="nav-indicator" id="networkStatus">
+                <span class="status-dot status-online"></span>
+                <span class="status-text">Online</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Common JavaScript -->
+    <script>
+        // Global configuration
+        const CONFIG = {
+            apiUrl: '/api',
+            stopLossPoints: {{ config.STOP_LOSS_POINTS }},
+            takeProfitPoints: {{ config.TAKE_PROFIT_POINTS }},
+            riskRewardRatio: {{ config.RISK_REWARD_RATIO }},
+            timeWindows: {{ config.TIME_WINDOWS | tojson | safe }}
+        };
+
+        // Utility functions
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('toast-show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('toast-show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function formatNumber(num, decimals = 2) {
+            return Number(num).toFixed(decimals);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Network status indicator
+        function updateNetworkStatus(online) {
+            const indicator = document.getElementById('networkStatus');
+            const dot = indicator.querySelector('.status-dot');
+            const text = indicator.querySelector('.status-text');
+
+            if (online) {
+                dot.className = 'status-dot status-online';
+                text.textContent = 'Online';
+            } else {
+                dot.className = 'status-dot status-offline';
+                text.textContent = 'Offline';
+            }
+        }
+
+        window.addEventListener('online', () => updateNetworkStatus(true));
+        window.addEventListener('offline', () => updateNetworkStatus(false));
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

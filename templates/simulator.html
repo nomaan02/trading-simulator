@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Simulator - German30 Trading Practice{% endblock %}
+
+{% block navbar_info %}
+<div class="navbar-info">
+    <span id="currentScenario" class="text-muted">No session active</span>
+    <span class="text-muted">•</span>
+    <span id="sessionProgress" class="text-muted">-/-</span>
+    <span class="text-muted">•</span>
+    <span id="sessionPnl" class="font-mono">+0.00 pts</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .simulator-layout {
+        display: flex;
+        height: calc(100vh - var(--navbar-height));
+        overflow: hidden;
+    }
+
+    .sidebar {
+        width: var(--sidebar-width);
+        background-color: var(--bg-panel);
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .sidebar-section {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-title {
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .chart-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .right-panel {
+        width: var(--right-panel-width);
+        background-color: var(--bg-panel);
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .right-panel-section {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .playlist {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .playlist-item {
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
+        background-color: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: var(--font-size-sm);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+
+    .playlist-item:hover {
+        border-color: var(--accent-blue);
+    }
+
+    .playlist-item.active {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+        color: white;
+    }
+
+    .playlist-item.completed {
+        opacity: 0.6;
+    }
+
+    .replay-controls {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+
+    .speed-selector {
+        display: flex;
+        gap: 4px;
+    }
+
+    .speed-btn {
+        padding: 4px 8px;
+        font-size: var(--font-size-xs);
+        background-color: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+
+    .speed-btn:hover {
+        border-color: var(--accent-blue);
+        color: var(--text-primary);
+    }
+
+    .speed-btn.active {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+        color: white;
+    }
+
+    .trade-entry-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .price-display {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--spacing-sm);
+        background-color: var(--bg-dark);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-sm);
+    }
+
+    .trade-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .a-grade-checklist label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        font-size: var(--font-size-sm);
+        margin-bottom: var(--spacing-xs);
+        cursor: pointer;
+    }
+
+    .candle-counter {
+        font-family: var(--font-mono);
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+    }
+
+    .session-stats-mini {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .stat-mini {
+        text-align: center;
+        padding: var(--spacing-sm);
+        background-color: var(--bg-dark);
+        border-radius: var(--radius-sm);
+    }
+
+    .stat-mini-value {
+        font-size: var(--font-size-lg);
+        font-weight: 600;
+        font-family: var(--font-mono);
+    }
+
+    .stat-mini-label {
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
+    }
+</style>
+
+<div class="simulator-layout">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <!-- Session Setup -->
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Session Setup</h3>
+            <div class="form-group">
+                <label class="form-label">Date Range</label>
+                <input type="date" id="startDate" class="form-input" value="2024-01-01">
+                <input type="date" id="endDate" class="form-input mt-sm" value="2024-12-31">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Time Window</label>
+                <select id="timeWindow" class="form-select">
+                    {% for key, window in time_windows.items() %}
+                    <option value="{{ key }}">{{ window.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button id="generatePlaylist" class="btn btn-primary" style="width: 100%;">
+                Generate Playlist
+            </button>
+        </div>
+
+        <!-- Playlist -->
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Playlist (<span id="playlistCount">0</span>)</h3>
+            <div id="playlist" class="playlist">
+                <p class="text-muted text-center">No dates loaded</p>
+            </div>
+        </div>
+
+        <!-- Drawing Tools -->
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Drawing Tools</h3>
+            <div class="d-flex flex-column gap-sm">
+                <button class="btn btn-sm btn-secondary" data-tool="hline">➖ Horizontal Line</button>
+                <button class="btn btn-sm btn-secondary" data-tool="trendline">📈 Trend Line</button>
+                <button class="btn btn-sm btn-secondary" data-tool="rectangle">▭ Rectangle</button>
+                <button class="btn btn-sm btn-secondary" data-tool="text">🏷️ Text Label</button>
+                <button class="btn btn-sm btn-danger" id="clearDrawings">🗑️ Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chart Area -->
+    <div class="chart-area">
+        <div class="multi-chart-container">
+            <!-- 4H Chart -->
+            <div class="chart-4h-container">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <span class="chart-title">4 Hour</span>
+                        <div class="chart-info">
+                            <span id="chart4hInfo">-</span>
+                        </div>
+                    </div>
+                    <div id="chart4h" class="chart-wrapper"></div>
+                </div>
+            </div>
+
+            <!-- 1H Chart -->
+            <div class="chart-1h-container">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <span class="chart-title">1 Hour</span>
+                        <div class="chart-info">
+                            <span id="chart1hInfo">-</span>
+                        </div>
+                    </div>
+                    <div id="chart1h" class="chart-wrapper"></div>
+                </div>
+            </div>
+
+            <!-- 3M Chart (Primary) -->
+            <div class="chart-3m-container">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <span class="chart-title">3 Minute</span>
+                        <div class="chart-info">
+                            <span class="candle-counter">
+                                Candles: <span id="candleCount">0</span>/<span id="totalCandles">0</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div id="chart3m" class="chart-wrapper"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel - Trade Controls -->
+    <div class="right-panel">
+        <!-- Current Status -->
+        <div class="right-panel-section">
+            <h3 class="sidebar-title">Current Status</h3>
+            <div id="statusInfo">
+                <p class="text-muted">No scenario loaded</p>
+            </div>
+        </div>
+
+        <!-- Replay Controls -->
+        <div class="right-panel-section">
+            <h3 class="sidebar-title">Replay Controls</h3>
+            <div class="replay-controls">
+                <button id="playBtn" class="btn btn-primary">▶ Play</button>
+                <button id="pauseBtn" class="btn btn-secondary" disabled>⏸ Pause</button>
+                <button id="nextBtn" class="btn btn-secondary">→ Next</button>
+            </div>
+            <div class="mt-md">
+                <label class="form-label">Speed</label>
+                <div class="speed-selector">
+                    <button class="speed-btn active" data-speed="1">1x</button>
+                    <button class="speed-btn" data-speed="2">2x</button>
+                    <button class="speed-btn" data-speed="5">5x</button>
+                    <button class="speed-btn" data-speed="10">10x</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade Entry -->
+        <div class="right-panel-section">
+            <h3 class="sidebar-title">Trade Entry</h3>
+            <div class="trade-entry-form">
+                <div class="trade-buttons">
+                    <button id="enterLong" class="btn btn-success">📈 Enter Long</button>
+                    <button id="enterShort" class="btn btn-danger">📉 Enter Short</button>
+                </div>
+
+                <div>
+                    <div class="price-display">
+                        <span>Entry:</span>
+                        <span id="entryPrice">-</span>
+                    </div>
+                    <div class="price-display mt-sm">
+                        <span>SL:</span>
+                        <span id="slPrice" class="text-danger">-18 pts</span>
+                    </div>
+                    <div class="price-display mt-sm">
+                        <span>TP:</span>
+                        <span id="tpPrice" class="text-success">+54 pts</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Trade Notes</label>
+                    <textarea id="tradeNotes" class="form-textarea" placeholder="What do you see?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">A-Grade Checklist</label>
+                    <div class="a-grade-checklist">
+                        <label>
+                            <input type="checkbox" id="check4h">
+                            4H bias aligned
+                        </label>
+                        <label>
+                            <input type="checkbox" id="check1h">
+                            1H order block confirmed
+                        </label>
+                        <label>
+                            <input type="checkbox" id="check3m">
+                            3-min entry signal clear
+                        </label>
+                        <label>
+                            <input type="checkbox" id="checkWindow">
+                            Valid time window
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Stats -->
+        <div class="right-panel-section">
+            <h3 class="sidebar-title">Session Stats</h3>
+            <div class="session-stats-mini">
+                <div class="stat-mini">
+                    <div class="stat-mini-value" id="sessionTrades">0</div>
+                    <div class="stat-mini-label">Trades</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value" id="sessionWinRate">0%</div>
+                    <div class="stat-mini-label">Win Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<!-- Replay Engine -->
+<script src="{{ url_for('static', filename='js/replay.js') }}"></script>
+<!-- Trade Entry -->
+<script src="{{ url_for('static', filename='js/trade-entry.js') }}"></script>
+
+<script>
+    // Initialize simulator
+    let currentSession = {% if session %}{{ session.to_dict() | tojson | safe }}{% else %}null{% endif %};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Simulator loaded');
+
+        if (currentSession) {
+            loadSession(currentSession);
+        }
+    });
+</script>
+{% endblock %}

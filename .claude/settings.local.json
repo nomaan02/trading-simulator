@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b A:trading-sim-ger30)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(git init:*)",
+      "Bash(pip install:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
