@@ -188,20 +188,28 @@ class ReplayEngine {
     }
 
     revealInitialCandles() {
-        // Show all 4H and 1H candles (context)
+        // Show minimal initial candles for all timeframes to preserve discovery
+        // 4H chart - show last 10 candles for some context
         if (this.allCandles['4h'].length > 0) {
-            chartManager.setData('4h', this.allCandles['4h']);
+            const num4h = Math.min(10, this.allCandles['4h'].length);
+            const initial4h = this.allCandles['4h'].slice(-num4h);
+            chartManager.setData('4h', initial4h);
             chartManager.fitContent('4h');
             this.updateChartInfo('4h');
+            console.log(`Revealed ${num4h}/${this.allCandles['4h'].length} 4H candles`);
         }
 
+        // 1H chart - show last 10 candles for some context
         if (this.allCandles['1h'].length > 0) {
-            chartManager.setData('1h', this.allCandles['1h']);
+            const num1h = Math.min(10, this.allCandles['1h'].length);
+            const initial1h = this.allCandles['1h'].slice(-num1h);
+            chartManager.setData('1h', initial1h);
             chartManager.fitContent('1h');
             this.updateChartInfo('1h');
+            console.log(`Revealed ${num1h}/${this.allCandles['1h'].length} 1H candles`);
         }
 
-        // Show first 3 candles of 3m (or all if less than 3)
+        // Show first 3 candles of 3m to start the hour
         const numInitial = Math.min(3, this.allCandles['3m'].length);
         const initialCandles = this.allCandles['3m'].slice(0, numInitial);
 
@@ -212,7 +220,7 @@ class ReplayEngine {
             chartManager.fitContent('3m');
             this.updateChartInfo('3m');
 
-            console.log(`Revealed ${numInitial} initial candles. Total available: ${this.allCandles['3m'].length}`);
+            console.log(`Revealed ${numInitial} initial 3M candles. Total available: ${this.allCandles['3m'].length}`);
         } else {
             showToast('No 3-minute candles available for this time window', 'warning');
         }

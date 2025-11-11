@@ -22,24 +22,24 @@ class Config:
     # Time windows in BST (GMT+1)
     TIME_WINDOWS = {
         'morning_1': {
-            'label': '08:06 - 08:23 BST',
-            'start': time(8, 6),
-            'end': time(8, 23)
+            'label': '08:00 - 09:00 BST',
+            'start': time(8, 0),
+            'end': time(8, 59)
         },
         'morning_2': {
-            'label': '09:06 - 09:23 BST',
-            'start': time(9, 6),
-            'end': time(9, 23)
+            'label': '09:00 - 10:00 BST',
+            'start': time(9, 0),
+            'end': time(9, 59)
         },
         'afternoon_1': {
-            'label': '14:30 - 14:45 BST',
-            'start': time(14, 30),
-            'end': time(14, 45)
+            'label': '14:00 - 15:00 BST',
+            'start': time(14, 0),
+            'end': time(14, 59)
         },
         'afternoon_2': {
-            'label': '15:06 - 15:23 BST',
-            'start': time(15, 6),
-            'end': time(15, 23)
+            'label': '15:00 - 16:00 BST',
+            'start': time(15, 0),
+            'end': time(15, 59)
         }
     }
 
