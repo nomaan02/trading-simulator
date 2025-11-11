@@ -192,20 +192,29 @@ class ReplayEngine {
         if (this.allCandles['4h'].length > 0) {
             chartManager.setData('4h', this.allCandles['4h']);
             chartManager.fitContent('4h');
+            this.updateChartInfo('4h');
         }
 
         if (this.allCandles['1h'].length > 0) {
             chartManager.setData('1h', this.allCandles['1h']);
             chartManager.fitContent('1h');
+            this.updateChartInfo('1h');
         }
 
-        // Show first 5 candles of 3m
-        const initialCandles = this.allCandles['3m'].slice(0, 5);
+        // Show first 3 candles of 3m (or all if less than 3)
+        const numInitial = Math.min(3, this.allCandles['3m'].length);
+        const initialCandles = this.allCandles['3m'].slice(0, numInitial);
+
         if (initialCandles.length > 0) {
             chartManager.setData('3m', initialCandles);
             this.currentIndex = initialCandles.length;
             this.updateCandleCounter();
             chartManager.fitContent('3m');
+            this.updateChartInfo('3m');
+
+            console.log(`Revealed ${numInitial} initial candles. Total available: ${this.allCandles['3m'].length}`);
+        } else {
+            showToast('No 3-minute candles available for this time window', 'warning');
         }
     }
 
@@ -258,6 +267,21 @@ class ReplayEngine {
         this.currentIndex++;
         this.updateCandleCounter();
 
+        // Update chart info with latest candle
+        if (this.currentIndex > 0) {
+            const displayCandle = this.allCandles['3m'][this.currentIndex - 1];
+            const infoEl = document.getElementById('chart3mInfo');
+            if (infoEl && displayCandle) {
+                const time = new Date(displayCandle.time * 1000);
+                const timeStr = time.toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Europe/London'
+                });
+                infoEl.textContent = `${timeStr} | O:${displayCandle.open.toFixed(2)} H:${displayCandle.high.toFixed(2)} L:${displayCandle.low.toFixed(2)} C:${displayCandle.close.toFixed(2)}`;
+            }
+        }
+
         // Auto-fit
         chartManager.fitContent('3m');
     }
@@ -274,6 +298,29 @@ class ReplayEngine {
     updateCandleCounter() {
         document.getElementById('candleCount').textContent = this.currentIndex;
         document.getElementById('totalCandles').textContent = this.allCandles['3m'].length;
+    }
+
+    updateChartInfo(timeframe) {
+        const candles = this.allCandles[timeframe];
+        if (!candles || candles.length === 0) {
+            return;
+        }
+
+        // Get last candle for display
+        const lastCandle = candles[candles.length - 1];
+        const infoEl = document.getElementById(`chart${timeframe}Info`);
+
+        if (infoEl) {
+            const time = new Date(lastCandle.time * 1000);
+            const timeStr = time.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Europe/London'
+            });
+            const dateStr = time.toLocaleDateString('en-GB', { timeZone: 'Europe/London' });
+
+            infoEl.textContent = `${dateStr} ${timeStr} | O:${lastCandle.open.toFixed(2)} H:${lastCandle.high.toFixed(2)} L:${lastCandle.low.toFixed(2)} C:${lastCandle.close.toFixed(2)}`;
+        }
     }
 
     async nextScenario() {
